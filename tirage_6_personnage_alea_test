@@ -1,0 +1,4 @@
+# Affichage
+print("Les 6 personnages tirés au sort sont :")
+for perso in tirage:
+    print("-", perso)

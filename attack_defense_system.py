@@ -107,3 +107,8 @@ def calcul_degats(attaquant, defenseur, attaque):
         return(degats)
     else:
         return("L'ennemi a évité l'attaque")
+    
+
+def calcul_hp(personnage, degats):
+    personnage["max_hp"] = personnage["max_hp"]-degats
+    return(personnage)

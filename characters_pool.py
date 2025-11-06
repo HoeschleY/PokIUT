@@ -16,5 +16,7 @@ character_list = [
     Character(name="Ugo", max_hp=85, atk=80, defense=50, speed=95, atk_spe=0, def_spe=0, attacks=[punch]),
     Character(name="Ibrahim", max_hp=150, atk=35, defense=20, speed=15, atk_spe=0, def_spe=0, attacks=[slash]),
     Character(name="Igor", max_hp=100, atk=50, defense=20, speed=60, atk_spe=0, def_spe=0, attacks=[kick]),
-    Character(name="Claire La Femme", max_hp=100, atk=100, defense=20, speed=60, atk_spe=0, def_spe=0, attacks=[slash, punch, kick])
+    Character(name="Claire La Femme", max_hp=100, atk=100, defense=20, speed=60, atk_spe=0, def_spe=0, attacks=[slash, punch, kick]),
+    Character(name="Hervé SilverFarb", max_hp=100, atk=100, defense=20, speed=60, atk_spe=0, def_spe=0, attacks=[slash, punch, kick]),
+    Character(name="Alexy Rassoul", max_hp=100, atk=50, defense=100, speed=40,atk_spe=0, def_spe=0, attacks=[slash, punch, kick])
 ]

@@ -84,3 +84,26 @@ class Defense:
         """
         character.is_defending = True
         print(f"\n{character.name} adopte une posture défensive 🛡️ (dégâts subis réduits au prochain tour).")
+
+
+def calcul_precision(attaque):
+    import random
+
+    precision_reelle = random.randint(0, 100)
+    if attaque["accuracy"] >= precision_reelle:
+        return(True)
+    else:
+        return(False)
+
+def calcul_degats(attaquant, defenseur, attaque):
+
+    if calcul_precision(attaque):
+        stat_ATK = attaquant["atk"]
+        stat_DEF = defenseur["def"]
+        puissance_attaque = attaque["power"]
+
+        degats = (stat_ATK/stat_DEF) * puissance_attaque
+
+        return(degats)
+    else:
+        return("L'ennemi a évité l'attaque")

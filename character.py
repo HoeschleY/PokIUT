@@ -4,7 +4,7 @@ from typing import List
 @dataclass
 class Attack:
     name: str
-    kind: str     # "ATK" ou "ATK_SPE"
+    kind: str     # "ATK"
     power: int
     accuracy: int
 
@@ -14,8 +14,6 @@ class Character:
     max_hp: int
     atk: int
     defense: int
-    atk_spe: int
-    def_spe: int
     speed: int
     attacks: List[Attack]
     is_player: bool = True

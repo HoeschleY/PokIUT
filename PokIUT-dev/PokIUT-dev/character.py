@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List
 from attack import Attack  # ✅ permet d'ajouter une liste d'attaques à chaque personnage
-import pygame
+
 
 @dataclass
 class Character:
@@ -27,31 +27,9 @@ class Character:
     def __post_init__(self):
         """
         Initialise les PV actuels au maximum au moment de la création.
-        Charge également le sprite du personnage.
         """
         self.hp = self.max_hp
         self.is_defending = False  # utile pour la classe Defense ou réduction de dégâts
-
-        # --- ### CORRECTION IMPORTANTE ICI ### ---
-        # On charge l'image à partir du chemin (self.sprite qui est un string)
-        # et on remplace le string par l'objet image chargé.
-        try:
-            image_path = self.sprite  # Garde le chemin en mémoire au cas où
-            self.sprite = pygame.image.load(image_path)
-            
-            # Optionnel : redimensionner tous les sprites à une taille fixe
-            # self.sprite = pygame.transform.scale(self.sprite, (128, 128))
-
-        except FileNotFoundError:
-            print(f"Erreur: Image {image_path} non trouvée pour {self.name}")
-            # On crée une image de remplacement pour éviter de planter
-            self.sprite = pygame.Surface((64, 64))
-            self.sprite.fill((255, 0, 255)) # Rose vif pour voir l'erreur
-        except pygame.error as e:
-            print(f"Erreur Pygame en chargeant {image_path}: {e}")
-            self.sprite = pygame.Surface((64, 64))
-            self.sprite.fill((255, 100, 100)) # Une autre couleur d'erreur
-        # --- ### FIN DE LA CORRECTION ### ---
 
     # ─────────────────────────────
     #         MÉCANIQUES DE JEU

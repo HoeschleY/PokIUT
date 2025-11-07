@@ -1,5 +1,7 @@
 import pygame
 import sys
+import subprocess # <-- AJOUT NÉCESSAIRE
+import os # <-- AJOUT NÉCESSAIRE
 
 # --- AJOUT : Imports de la logique du jeu ---
 from characters_pool import character_list
@@ -53,13 +55,6 @@ fond_image_menu = None
 fond_image_jeu = None 
 fond_image_combat = None # Placeholder pour le fond de combat
 
-# (Vous pouvez décommenter ceci pour charger un fond de combat)
-# try:
-#     fond_image_combat = pygame.image.load("ton_image_de_combat.png") 
-#     fond_image_combat = pygame.transform.scale(fond_image_combat, (LARGEUR, HAUTEUR))
-# except pygame.error:
-#     print("Image de fond 'ton_image_de_combat.png' non trouvée.")
-
 # --- NOUVEAU : Constantes de combat ---
 SPRITE_TAILLE = (128, 128) # Taille fixe de 128x128 pour les sprites en combat
 BARRE_VIE_LARGEUR = 120
@@ -98,7 +93,6 @@ def dessiner_infos_perso(surface, perso, centre_img_pos):
     et les HP d'un personnage.
     """
     
-    # 1. Dessiner le Sprite (redimensionné à SPRITE_TAILLE)
     try:
         sprite_scaled = pygame.transform.scale(perso.sprite, SPRITE_TAILLE)
     except Exception as e:
@@ -108,18 +102,15 @@ def dessiner_infos_perso(surface, perso, centre_img_pos):
         
     rect_img = sprite_scaled.get_rect(center=centre_img_pos)
     
-    # Griser le sprite si K.O.
     if perso.is_ko():
         sprite_scaled.set_alpha(100)
         
     surface.blit(sprite_scaled, rect_img)
     
-    # 2. Dessiner le Nom (sous l'image)
     nom_texte = police_info.render(perso.name, True, BLANC)
     nom_rect = nom_texte.get_rect(center=(rect_img.centerx, rect_img.bottom + 15))
     surface.blit(nom_texte, nom_rect)
     
-    # --- Barre de vie et HP (sous le nom) ---
     y_barre = nom_rect.bottom + 8
     hp_texte_surface = police_info.render(f"{perso.hp}/{perso.max_hp}", True, BLANC)
     hp_texte_rect = hp_texte_surface.get_rect()
@@ -195,7 +186,6 @@ def ecran_gacha(game_master: GameMaster):
                             
                             try:
                                 equipe_joueur = game_master.draw_characters(n=6)
-                                # Soigne l'équipe tirée au cas où
                                 for perso in equipe_joueur:
                                     perso.heal_full()
                                 print(f"Équipe obtenue : {[p.name for p in equipe_joueur]}") 
@@ -207,7 +197,6 @@ def ecran_gacha(game_master: GameMaster):
                             en_ecran_gacha = False
         
         if resultat_affiche:
-            # --- DESSIN DE L'ÉCRAN DE RÉSULTAT ---
             if fond_image_jeu: 
                 FENETRE.blit(fond_image_jeu, (0, 0))
             else:
@@ -222,7 +211,6 @@ def ecran_gacha(game_master: GameMaster):
             dessiner_bouton("Continuer", bouton_continuer_rect, BLEU_BOUTON, BLANC, police_bouton, pos_souris)
             
         else:
-            # --- DESSIN DE L'ÉCRAN DE TIRAGE (NORMAL) ---
             if fond_image_jeu: 
                 FENETRE.blit(fond_image_jeu, (0, 0))
             else:
@@ -235,61 +223,126 @@ def ecran_gacha(game_master: GameMaster):
         pygame.display.flip()
         horloge.tick(60)
 
-# --- ### MODIFIÉ ### : Appelle combat.py et gère le résultat ---
-# --- ### MODIFIÉ ### : Appelle combat.py avec les BONS arguments ---
-from combat import lancer_combat # Assure-toi que cet import est en HAUT
-
-# --- ### MODIFIÉ ### : Appelle combat.py avec les BONS arguments ---
-from combat import lancer_combat # Assure-toi que cet import est en HAUT
-
+# --- ### MODIFIÉ ### : Logique de fin de partie déplacée ici ---
+# --- ### MODIFIÉ ### : Pas de récompense en cas de défaite ---
 def ecran_combat(game_master: GameMaster):
     """
-    Appelle le module de combat externe et gère la boucle de "rejouer".
+    Gère la boucle de combat, appelle combat.py,
+    puis gère l'écran de fin de partie.
     """
     print(f"Lancement du module de combat avec : {[p.name for p in equipe_combat]}")
     
-    global compteur_victoires, compteur_defaites
+    global compteur_victoires, compteur_defaites, equipe_joueur
 
-    en_combat_global = True # Boucle pour rejouer
+    en_combat_global = True
+    horloge = pygame.time.Clock()
     
+    # Textes de fin de partie (définis une seule fois)
+    texte_victoire = police_titre.render("Victoire !", True, JAUNE_TITRE)
+    texte_defaite = police_titre.render("Défaite...", True, ROUGE_BOUTON)
+    
+    # Boutons de fin de partie (définis une seule fois)
+    bouton_continuer_rect = pygame.Rect(0, 0, 250, 70)
+    bouton_continuer_rect.center = (LARGEUR // 2, HAUTEUR // 2 + 50)
+    bouton_changer_equipe_rect = pygame.Rect(0, 0, 300, 70)
+    bouton_changer_equipe_rect.center = (LARGEUR // 2, HAUTEUR // 2 + 140)
+    
+    # Positions pour les récompenses
+    positions_recompense = [
+        (LARGEUR * 1/4, HAUTEUR // 2),
+        (LARGEUR * 2/4, HAUTEUR // 2),
+        (LARGEUR * 3/4, HAUTEUR // 2),
+    ]
+
     while en_combat_global:
         
-        # Soigne l'équipe du joueur avant chaque combat
+        # Soigne l'équipe avant le combat
         for perso in equipe_joueur:
             perso.heal_full()
             
-        # Appelle ton module de combat externe avec les 10 arguments corrects
+        # 1. Lancer le combat (combat.py prend le contrôle)
         resultat = lancer_combat(
             FENETRE, 
             equipe_combat, 
             game_master, 
             dessiner_infos_perso,
-            police_bouton,  # Argument 5
-            police_info,    # Argument 6
-            LARGEUR,        # Argument 7
-            HAUTEUR,        # Argument 8
-            VERT_VIE,       # Argument 9
-            ROUGE_VIE_FOND  # Argument 10
+            police_bouton,  
+            police_info,    
+            LARGEUR,        
+            HAUTEUR,        
+            VERT_VIE,       
+            ROUGE_VIE_FOND  
         )
         
-        # --- Gère le résultat retourné par combat.py ---
+        # 2. Combat terminé, fenetre.py reprend le contrôle
+        nouveaux_persos = []
+        message_recompense = ""
+        
         if resultat == "victoire":
             compteur_victoires += 1
-            print(f"Combat gagné ! (Total: {compteur_victoires}). On rejoue.")
-            # en_combat_global reste True, la boucle recommence
-            
+            print(f"Combat gagné ! (Total: {compteur_victoires}).")
+            texte_titre_fin = texte_victoire
+            try:
+                nouveaux_persos = game_master.draw_characters(n=3)
+                equipe_joueur.extend(nouveaux_persos)
+                message_recompense = "Vous obtenez 3 nouveaux PokIUTs !"
+                print(f"3 nouveaux PokIUTs obtenus ! (Total: {len(equipe_joueur)})")
+            except ValueError:
+                message_recompense = "Pool de personnages épuisée !"
+
         elif resultat == "defaite":
             compteur_defaites += 1
-            print(f"Combat perdu. (Total: {compteur_defaites}). On rejoue.")
-            # en_combat_global reste True, la boucle recommence
-            
-        elif resultat == "changer_equipe":
+            print(f"Combat perdu. (Total: {compteur_defaites}).")
+            texte_titre_fin = texte_defaite
+            # --- ### MODIFIÉ ICI ### ---
+            message_recompense = "Vous n'obtenez pas de récompense."
+            nouveaux_persos = [] # Assure qu'on n'affiche rien
+            # (Le tirage de 3 persos a été supprimé)
+            # --- ### FIN MODIFICATION ### ---
+
+        else: # "changer_equipe" ou autre
             print("Retour à la sélection de l'équipe.")
-            en_combat_global = False # On sort de la boucle "rejouer"
-            
-        else: # Si combat.py se ferme (clic sur "Quitter") ou retourne None
-            print("Sortie du combat. Retour à la sélection.")
             en_combat_global = False
+            continue # Saute l'écran de relance
+
+        # 3. Boucle de l'écran "Relancer" (géré par fenetre.py)
+        ecran_relance_actif = True
+        while ecran_relance_actif:
+            pos_souris = pygame.mouse.get_pos()
+            
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        if bouton_continuer_rect.collidepoint(pos_souris):
+                            ecran_relance_actif = False # Sortir de l'écran relance
+                            # en_combat_global reste True, on relance un combat
+                        elif bouton_changer_equipe_rect.collidepoint(pos_souris):
+                            ecran_relance_actif = False # Sortir de l'écran relance
+                            en_combat_global = False # Sortir de la boucle de combat
+
+            # Dessin de l'écran de relance
+            FENETRE.fill((20, 0, 30)) # Fond violet sombre
+            
+            # Afficher "Victoire" ou "Défaite"
+            FENETRE.blit(texte_titre_fin, texte_titre_fin.get_rect(center=(LARGEUR // 2, HAUTEUR // 2 - 200)))
+            
+            # Afficher le message de récompense
+            msg_surf = police_bouton.render(message_recompense, True, BLANC)
+            FENETRE.blit(msg_surf, msg_surf.get_rect(center=(LARGEUR // 2, HAUTEUR // 2 - 100)))
+
+            # Afficher les 3 nouveaux persos (sera une liste vide si défaite)
+            for i in range(len(nouveaux_persos)):
+                dessiner_infos_perso(FENETRE, nouveaux_persos[i], positions_recompense[i])
+
+            # Dessiner les boutons
+            dessiner_bouton("Continuer", bouton_continuer_rect, BLEU_BOUTON, BLANC, police_bouton, pos_souris)
+            dessiner_bouton("Changer d'équipe", bouton_changer_equipe_rect, VIOLET_SECONDAIRE, BLANC, police_bouton, pos_souris)
+            
+            pygame.display.flip()
+            horloge.tick(60)
 
     # --- Fin de la boucle 'en_combat_global' ---
     for perso in equipe_joueur:
@@ -316,12 +369,12 @@ def ecran_composition_equipe(game_master: GameMaster):
     bouton_jouer_rect.center = (LARGEUR // 2, HAUTEUR - 140) 
 
     options_cliquables = []
-    y_offset = HAUTEUR // 2 - 100
+    y_offset = HAUTEUR // 2 - 150 # Remonté un peu
     for perso in equipe_joueur:
         texte_perso = police_bouton.render(perso.name, True, BLANC)
         rect = texte_perso.get_rect(center=(LARGEUR // 2, y_offset))
         options_cliquables.append({'perso': perso, 'rect': rect})
-        y_offset += 50 
+        y_offset += 50 # Plus d'espace
 
     message_info = "" 
 
@@ -504,7 +557,6 @@ def menu_principal(game_master: GameMaster):
 # --- Lancer le menu principal au démarrage du script ---
 if __name__ == "__main__":
     # On crée le GameMaster ici
-    # On lui donne la liste de tous les personnages possibles
     mon_game_master = GameMaster(characters=character_list, seed=None)
     
     # On lance le menu principal en lui donnant accès au game_master

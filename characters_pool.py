@@ -27,7 +27,7 @@ character_list = [
     Character(name="Philippe", max_hp=85, atk=60, defense=70, speed=60, atk_spe=0, def_spe=0, attacks=[punch, dormir, blague], sprite="assets/sprites/philippe.png"),
     Character(name="Martimoule", max_hp=70, atk=85, defense=70, speed=100, atk_spe=0, def_spe=0, attacks=[enter_the_void, dessine, dormir], sprite="assets/sprites/martimoule.png"),
     Character(name="Ugo", max_hp=85, atk=80, defense=50, speed=95, atk_spe=0, def_spe=0, attacks=[punch, mega_punch, kick], sprite="assets/sprites/ugo.png"),
-    Character(name="Ibrahim", max_hp=150, atk=35, defense=20, speed=15, atk_spe=0, def_spe=0, attacks=[slash, dormir, dessine], sprite="assets/sprites/ibrahim.png"),
+    Character(name="Ibrahim", max_hp=150, atk=35, defense=20, speed=15, atk_spe=0, def_spe=0, attacks=[roblox, dormir, dessine], sprite="assets/sprites/ibrahim.png"),
     Character(name="Igor", max_hp=100, atk=50, defense=20, speed=60, atk_spe=0, def_spe=0, attacks=[kick, mail, ce_message_ne_vient_PAS_de_moi], sprite="assets/sprites/igor.png"),
     Character(name="Claire La Femme", max_hp=100, atk=100, defense=20, speed=60, atk_spe=0, def_spe=0, attacks=[punch, mega_punch, andrew], sprite="assets/sprites/clairelafemme.png"),
     Character(name="Hervé SilverFarb", max_hp=100, atk=100, defense=20, speed=60, atk_spe=0, def_spe=0, attacks=[Vdecramer, punch, kick], sprite="assets/sprites/herve.png"),
@@ -45,6 +45,7 @@ character_list = [
     Character(name="Yanis", max_hp=90, atk=80, defense=70, speed=60, atk_spe=0, def_spe=0, attacks=[dormir, run, blague], sprite="assets/sprites/yanis.png"),
     Character(name="Muller", max_hp=90, atk=90, defense=90, speed=90, atk_spe=0, def_spe=0, attacks=[run, punch, kick], sprite="assets/sprites/muller.png")
 ]
+
 
 
 

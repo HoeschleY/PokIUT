@@ -4,20 +4,21 @@ from attack import Attack
 # Définir quelques attaques de base
 slash = Attack(name="Slash", kind="ATK", power=40, accuracy=95)
 punch = Attack(name="Punch", kind="ATK", power=35, accuracy=100)
-mega_punch = Attack(name="MegaPunch", kind="ATK", power=90, accuracy=85)
-run = Attack(name="Run", kind="ATK", power=70, accuracy=100)
-blague = Attack(name="Blague", kind="ATK", power=70, accuracy=70)
+mega_punch = Attack(name="MegaPunch", kind="ATK", power=75, accuracy=85)
+run = Attack(name="Run", kind="ATK", power=60, accuracy=100)
+blague = Attack(name="Blague", kind="ATK", power=60, accuracy=70)
 kick  = Attack(name="Kick",  kind="ATK", power=50, accuracy=90)
-andrew = Attack(name="Andrew Special", kind="ATK", power=100, accuracy=85)
-Vdecramer = Attack(name="Vdecramer", kind="ATK", power=60, accuracy=90)
+andrew = Attack(name="Andrew Special", kind="ATK", power=75, accuracy=85)
+Vdecramer = Attack(name="Vdecramer", kind="ATK", power=65, accuracy=90)
 dessine = Attack(name="Dessine", kind="ATK", power=70, accuracy=95)
 ce_message_ne_vient_PAS_de_moi = Attack(name="Ce message ne vient PAS de moi", kind="ATK", power=80, accuracy=90)
-dormir = Attack(name="Dormir", kind="DEF", power=0, accuracy=100)
-roblox = Attack(name="Roblox", kind="ATK", power=90, accuracy=80)
-enter_the_void = Attack(name="Enter the Void", kind="ATK", power=120, accuracy=70)
-magic_the_gathering = Attack(name="Magic The Gathering", kind="ATK", power=80, accuracy=75)
+dormir = Attack(name="Dormir", kind="DEF", power=45, accuracy=100)
+valo = Attack(name="Valo", kind="ATK", power=50, accuracy=80)
+roblox = Attack(name="Roblox", kind="ATK", power=50, accuracy=90)
+enter_the_void = Attack(name="Enter the Void", kind="ATK", power=65, accuracy=70)
+magic_the_gathering = Attack(name="Magic The Gathering", kind="ATK", power=60, accuracy=75)
 mail = Attack(name="Mail", kind="ATK", power=50, accuracy=100)
-do_brazil =  Attack(name="Do Brazil", kind="ATK", power=70, accuracy=100)
+do_brazil =  Attack(name="Do Brazil", kind="ATK", power=60, accuracy=100)
 
 character_list = [
     Character(name="Jade", max_hp=70, atk=80, defense=80, speed=100, atk_spe=0, def_spe=0, attacks=[slash, punch, dormir], sprite="assets/sprites/jade.png"),
@@ -27,7 +28,7 @@ character_list = [
     Character(name="Philippe", max_hp=85, atk=60, defense=70, speed=60, atk_spe=0, def_spe=0, attacks=[punch, dormir, blague], sprite="assets/sprites/philippe.png"),
     Character(name="Martimoule", max_hp=70, atk=85, defense=70, speed=100, atk_spe=0, def_spe=0, attacks=[enter_the_void, dessine, dormir], sprite="assets/sprites/martimoule.png"),
     Character(name="Ugo", max_hp=85, atk=80, defense=50, speed=95, atk_spe=0, def_spe=0, attacks=[punch, mega_punch, kick], sprite="assets/sprites/ugo.png"),
-    Character(name="Ibrahim", max_hp=150, atk=35, defense=20, speed=15, atk_spe=0, def_spe=0, attacks=[roblox, dormir, dessine], sprite="assets/sprites/ibrahim.png"),
+    Character(name="Ibrahim", max_hp=150, atk=35, defense=20, speed=15, atk_spe=0, def_spe=0, attacks=[valo, dormir, roblox], sprite="assets/sprites/ibrahim.png"),
     Character(name="Igor", max_hp=100, atk=50, defense=20, speed=60, atk_spe=0, def_spe=0, attacks=[kick, mail, ce_message_ne_vient_PAS_de_moi], sprite="assets/sprites/igor.png"),
     Character(name="Claire La Femme", max_hp=100, atk=100, defense=20, speed=60, atk_spe=0, def_spe=0, attacks=[punch, mega_punch, andrew], sprite="assets/sprites/clairelafemme.png"),
     Character(name="Hervé SilverFarb", max_hp=100, atk=100, defense=20, speed=60, atk_spe=0, def_spe=0, attacks=[Vdecramer, punch, kick], sprite="assets/sprites/herve.png"),
@@ -45,6 +46,7 @@ character_list = [
     Character(name="Yanis", max_hp=90, atk=80, defense=70, speed=60, atk_spe=0, def_spe=0, attacks=[dormir, run, blague], sprite="assets/sprites/yanis.png"),
     Character(name="Muller", max_hp=90, atk=90, defense=90, speed=90, atk_spe=0, def_spe=0, attacks=[run, punch, kick], sprite="assets/sprites/muller.png")
 ]
+
 
 
 

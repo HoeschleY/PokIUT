@@ -21,7 +21,7 @@ mail = Attack(name="Mail", kind="ATK", power=50, accuracy=100)
 do_brazil =  Attack(name="Do Brazil", kind="ATK", power=60, accuracy=100)
 
 character_list = [
-    Character(name="Jade", max_hp=70, atk=80, defense=80, speed=100, atk_spe=0, def_spe=0, attacks=[slash, punch, dormir], sprite="assets/sprites/jade.png"),
+    Character(name="Jade", max_hp=70, atk=80, defense=40, speed=100, atk_spe=0, def_spe=0, attacks=[slash, punch, dormir], sprite="assets/sprites/jade.png"),
     Character(name="Yannick", max_hp=150, atk=50, defense=40, speed=15, atk_spe=0, def_spe=0, attacks=[slash, roblox, kick], sprite="assets/sprites/yannick.png"),
     Character(name="Lucas MichMich", max_hp=100, atk=40, defense=60, speed=40, atk_spe=0, def_spe=0, attacks=[kick, punch, enter_the_void], sprite="assets/sprites/lucas_michmich.png"),
     Character(name="Corentin", max_hp=100, atk=60, defense=40, speed=40, atk_spe=0, def_spe=0, attacks=[slash, kick, blague], sprite="assets/sprites/corentin.png"),
@@ -46,6 +46,7 @@ character_list = [
     Character(name="Yanis", max_hp=90, atk=80, defense=70, speed=60, atk_spe=0, def_spe=0, attacks=[dormir, run, blague], sprite="assets/sprites/yanis.png"),
     Character(name="Muller", max_hp=90, atk=90, defense=90, speed=90, atk_spe=0, def_spe=0, attacks=[run, punch, kick], sprite="assets/sprites/muller.png")
 ]
+
 
 
 

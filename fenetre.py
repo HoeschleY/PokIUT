@@ -136,20 +136,46 @@ def dessiner_infos_perso(surface, perso, centre_img_pos):
 
 # --- Fonctions des différents écrans du jeu ---
 
+# ### MODIFIÉ ### : Logique de tirage mise à jour pour afficher les 6 persos
 def ecran_gacha(game_master: GameMaster):
     """Écran pour le tirage au sort de personnages."""
     print("Écran de tirage Gacha !")
     en_ecran_gacha = True
     horloge = pygame.time.Clock()
 
+    # --- Variables d'état ---
+    # On ajoute un état pour savoir si on est en train de voir le résultat
+    resultat_affiche = False 
+    
+    # --- Titres ---
     texte_gacha = police_sous_titre.render("Tirage au sort PokIUT", True, VIOLET_SECONDAIRE)
     texte_gacha_rect = texte_gacha.get_rect(center=(LARGEUR // 2, HAUTEUR // 4))
+    
+    texte_resultat = police_sous_titre.render("Félicitations, tu as obtenus 6 PokIUT !", True, JAUNE_TITRE)
+    texte_resultat_rect = texte_resultat.get_rect(center=(LARGEUR // 2, 50))
 
+    # --- Boutons ---
     bouton_tirer_rect = pygame.Rect(0, 0, 250, 70)
     bouton_tirer_rect.center = (LARGEUR // 2, HAUTEUR // 2)
 
     bouton_retour_rect = pygame.Rect(0, 0, 200, 60)
     bouton_retour_rect.center = (LARGEUR // 2, HAUTEUR // 2 + 150)
+    
+    # Nouveau bouton pour l'écran de résultat
+    bouton_continuer_rect = pygame.Rect(0, 0, 200, 60)
+    bouton_continuer_rect.center = (LARGEUR // 2, HAUTEUR - 60)
+    
+    # --- Positions pour les 6 personnages (2 lignes de 3) ---
+    positions_tirage = [
+        # Ligne du haut
+        (LARGEUR * 1/4, HAUTEUR // 2 - 120),
+        (LARGEUR * 2/4, HAUTEUR // 2 - 120),
+        (LARGEUR * 3/4, HAUTEUR // 2 - 120),
+        # Ligne du bas
+        (LARGEUR * 1/4, HAUTEUR // 2 + 180),
+        (LARGEUR * 2/4, HAUTEUR // 2 + 180),
+        (LARGEUR * 3/4, HAUTEUR // 2 + 180),
+    ]
 
     while en_ecran_gacha:
         pos_souris = pygame.mouse.get_pos()
@@ -159,45 +185,64 @@ def ecran_gacha(game_master: GameMaster):
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    if bouton_tirer_rect.collidepoint(event.pos):
-                        print("Faire un tirage de 6 personnages !")
-                        
-                        global equipe_joueur 
-                        global equipe_combat # On réinitialise l'équipe de combat
-                        equipe_combat = []   # car on a tiré une nouvelle équipe
-                        
-                        try:
-                            equipe_joueur = game_master.draw_characters(n=6)
-                            print(f"Équipe obtenue : {[p.name for p in equipe_joueur]}") 
-                            message_tirage = police_bouton.render("Tu as obtenu 6 PokIUTs !", True, BLANC)
-                        except ValueError:
-                            message_tirage = police_bouton.render("Plus de personnages !", True, ROUGE_BOUTON)
-                        
-                        message_tirage_rect = message_tirage.get_rect(center=(LARGEUR // 2, HAUTEUR // 2 - 80))
-                        
-                        if fond_image_jeu: FENETRE.blit(fond_image_jeu, (0, 0))
-                        else: dessiner_fond_degrade(NOIR, VIOLET_SECONDAIRE)
-                        
-                        FENETRE.blit(texte_gacha, texte_gacha_rect)
-                        FENETRE.blit(message_tirage, message_tirage_rect)
-                        
-                        dessiner_bouton("Tirer un PokIUT", bouton_tirer_rect, VERT_BOUTON, BLANC, police_bouton, pos_souris)
-                        dessiner_bouton("Retour", bouton_retour_rect, ROUGE_BOUTON, BLANC, police_bouton, pos_souris)
-                        
-                        pygame.display.flip()
-                        pygame.time.wait(2000)
-                        
-                    elif bouton_retour_rect.collidepoint(event.pos):
-                        en_ecran_gacha = False 
+                    
+                    if resultat_affiche:
+                        # Si on est sur l'écran de résultat, on vérifie le clic "Continuer"
+                        if bouton_continuer_rect.collidepoint(event.pos):
+                            resultat_affiche = False # On revient à l'écran de tirage
+                    
+                    else:
+                        # Si on est sur l'écran de tirage principal
+                        if bouton_tirer_rect.collidepoint(event.pos):
+                            print("Faire un tirage de 6 personnages !")
+                            
+                            global equipe_joueur 
+                            global equipe_combat 
+                            equipe_combat = []   
+                            
+                            try:
+                                equipe_joueur = game_master.draw_characters(n=6)
+                                print(f"Équipe obtenue : {[p.name for p in equipe_joueur]}") 
+                                # On passe à l'état "résultat"
+                                resultat_affiche = True 
+                            except ValueError:
+                                # Gérer l'erreur s'il n'y a plus de persos (on ne change pas d'état)
+                                print("Erreur: Plus de personnages à tirer !")
+                                # (On pourrait afficher un message d'erreur ici)
+                            
+                        elif bouton_retour_rect.collidepoint(event.pos):
+                            en_ecran_gacha = False # Quitte l'écran Gacha
 
-        if fond_image_jeu: 
-            FENETRE.blit(fond_image_jeu, (0, 0))
+        # --- ### MODIFIÉ : Logique de Dessin ### ---
+        
+        if resultat_affiche:
+            # --- DESSIN DE L'ÉCRAN DE RÉSULTAT ---
+            if fond_image_jeu: 
+                FENETRE.blit(fond_image_jeu, (0, 0))
+            else:
+                dessiner_fond_degrade(NOIR, VIOLET_SECONDAIRE) 
+
+            # Titre
+            FENETRE.blit(texte_resultat, texte_resultat_rect)
+            
+            # Afficher les 6 personnages
+            for i in range(len(equipe_joueur)):
+                if i < len(positions_tirage): # Sécurité
+                    dessiner_infos_perso(FENETRE, equipe_joueur[i], positions_tirage[i])
+            
+            # Bouton "Continuer"
+            dessiner_bouton("Continuer", bouton_continuer_rect, BLEU_BOUTON, BLANC, police_bouton, pos_souris)
+            
         else:
-            dessiner_fond_degrade(NOIR, VIOLET_SECONDAIRE) 
+            # --- DESSIN DE L'ÉCRAN DE TIRAGE (NORMAL) ---
+            if fond_image_jeu: 
+                FENETRE.blit(fond_image_jeu, (0, 0))
+            else:
+                dessiner_fond_degrade(NOIR, VIOLET_SECONDAIRE) 
 
-        FENETRE.blit(texte_gacha, texte_gacha_rect)
-        dessiner_bouton("Tirer un PokIUT", bouton_tirer_rect, VERT_BOUTON, BLANC, police_bouton, pos_souris)
-        dessiner_bouton("Retour", bouton_retour_rect, ROUGE_BOUTON, BLANC, police_bouton, pos_souris)
+            FENETRE.blit(texte_gacha, texte_gacha_rect)
+            dessiner_bouton("Tirer un PokIUT", bouton_tirer_rect, VERT_BOUTON, BLANC, police_bouton, pos_souris)
+            dessiner_bouton("Retour", bouton_retour_rect, ROUGE_BOUTON, BLANC, police_bouton, pos_souris)
 
         pygame.display.flip()
         horloge.tick(60)
@@ -392,10 +437,10 @@ def main_game_menu(game_master: GameMaster):
     titre_jeu_rect = texte_titre_jeu.get_rect(center=(LARGEUR // 2, HAUTEUR // 5))
     ombre_titre_jeu_rect = ombre_titre_jeu.get_rect(center=(LARGEUR // 2 + 3, HAUTEUR // 5 + 3))
 
-    bouton_gacha_rect = pygame.Rect(0, 0, 300, 70)
+    bouton_gacha_rect = pygame.Rect(0, 0, 400, 70)
     bouton_gacha_rect.center = (LARGEUR // 2, HAUTEUR // 2 - 80)
 
-    bouton_equipe_rect = pygame.Rect(0, 0, 300, 70)
+    bouton_equipe_rect = pygame.Rect(0, 0, 400, 70)
     bouton_equipe_rect.center = (LARGEUR // 2, HAUTEUR // 2 + 20)
 
     bouton_retour_rect = pygame.Rect(0, 0, 200, 60)

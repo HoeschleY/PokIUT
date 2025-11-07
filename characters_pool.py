@@ -5,6 +5,14 @@ from attack import Attack
 slash = Attack(name="Slash", kind="ATK", power=40, accuracy=95)
 punch = Attack(name="Punch", kind="ATK", power=30, accuracy=100)
 kick  = Attack(name="Kick",  kind="ATK", power=50, accuracy=90)
+andrew = Attack(name="Andrew Special", kind="ATK", power=100, accuracy=85)
+Vdecramer = Attack(name="Vdecramer", kind="ATK", power=60, accuracy=90)
+dessine = Attack(name="Dessine", kind="ATK", power=70, accuracy=95)
+ce_message_ne_vient_PAS_de_moi = Attack(name="Ce message ne vient PAS de moi", kind="ATK", power=80, accuracy=90)
+dormir = Attack(name="Dormir", kind="DEF", power=0, accuracy=100)
+roblox = Attack(name="Roblox", kind="ATK", power=90, accuracy=80)
+enter_the_void = Attack(name="Enter the Void", kind="ATK", power=120, accuracy=70)
+magic_the_gathering = Attack(name="Magic The Gathering", kind="ATK", power=80, accuracy=75)
 
 character_list = [
     Character(name="Jade", max_hp=70, atk=80, defense=80, speed=100, atk_spe=0, def_spe=0, attacks=[slash, punch], sprite="assets/sprites/jade.png"),
@@ -30,6 +38,7 @@ character_list = [
     Character(name="Fan dy Rassoul", max_hp=10, atk=10, defense=10, speed=50, atk_spe=0, def_spe=0, attacks=[slash, punch, kick], sprite="assets/sprites/fan.png"),
     Character(name="Charo line", max_hp=90, atk=80, defense=60, speed=60, atk_spe=0, def_spe=0, attacks=[slash, punch, kick], sprite="assets/sprites/charoline.png")
 ]
+
 
 
 

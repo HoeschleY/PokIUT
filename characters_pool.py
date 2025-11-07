@@ -22,9 +22,10 @@ character_list = [
     Character(name="Lavalanche", max_hp=90, atk=90, defense=30, speed=20, atk_spe=0, def_spe=0, attacks=[slash, punch, kick], sprite="assets/sprites/laval.png"),
     Character(name="Leon", max_hp=50, atk=110, defense=60, speed=90, atk_spe=0, def_spe=0, attacks=[slash, punch, kick], sprite="assets/sprites/leon.png"),
     Character(name="Champ Billard", max_hp=150, atk=20, defense=40, speed=60, atk_spe=0, def_spe=0, attacks=[slash, punch, kick], sprite="assets/sprites/chanvillard.png"),
-    Character(name="Adri Anguille", max_hp=100, atk=100, defense=00, speed=100, atk_spe=0, def_spe=0, attacks=[slash, punch, kick], sprite="assets/sprites/guille.png"),
+    Character(name="Adri Anguille", max_hp=100, atk=100, defense=10, speed=100, atk_spe=0, def_spe=0, attacks=[slash, punch, kick], sprite="assets/sprites/guille.png"),
     Character(name="Nolan", max_hp=70, atk=70, defense=70, speed=70, atk_spe=0, def_spe=0, attacks=[slash, punch, kick], sprite="assets/sprites/nolan.png"),
     Character(name="Agouno", max_hp=100, atk=100, defense=20, speed=60, atk_spe=0, def_spe=0, attacks=[slash, punch, kick], sprite="assets/sprites/agoun.png")
 ]
+
 
 

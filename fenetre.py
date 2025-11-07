@@ -5,18 +5,21 @@ import sys
 from characters_pool import character_list
 from game_master import GameMaster
 from character import Character
+from combat import lancer_combat # <-- IMPORTANT : On importe ton module de combat
 # ------------------------------------------
 
-# --- ### MODIFIÉ ### : Ajout des listes globales ---
+# --- ### MODIFIÉ ### : Ajout des listes globales & compteurs ---
 equipe_joueur = [] # L'équipe obtenue au tirage
 equipe_combat = [] # L'équipe sélectionnée pour le combat
+compteur_victoires = 0
+compteur_defaites = 0
 # -----------------------------------------------------------
 
 # --- Initialisation de Pygame ---
 pygame.init()
 
 # --- Paramètres de la fenêtre ---
-LARGEUR, HAUTEUR = 1200, 800
+LARGEUR, HAUTEUR = 1200, 800 # Taille mise à jour
 FENETRE = pygame.display.set_mode((LARGEUR, HAUTEUR))
 pygame.display.set_caption("PokIUT - Le Gacha Ultime !")
 
@@ -48,11 +51,21 @@ police_info = pygame.font.Font(None, 30) # Police plus petite pour les infos
 # --- Assets (Images) ---
 fond_image_menu = None 
 fond_image_jeu = None 
+fond_image_combat = None # Placeholder pour le fond de combat
+
+# (Vous pouvez décommenter ceci pour charger un fond de combat)
+# try:
+#     fond_image_combat = pygame.image.load("ton_image_de_combat.png") 
+#     fond_image_combat = pygame.transform.scale(fond_image_combat, (LARGEUR, HAUTEUR))
+# except pygame.error:
+#     print("Image de fond 'ton_image_de_combat.png' non trouvée.")
+
 # --- NOUVEAU : Constantes de combat ---
 SPRITE_TAILLE = (128, 128) # Taille fixe de 128x128 pour les sprites en combat
 BARRE_VIE_LARGEUR = 120
 BARRE_VIE_HAUTEUR = 15
 # ------------------------------------
+
 
 # --- Fonctions utilitaires de dessin ---
 def dessiner_fond_degrade(couleur_haut, couleur_bas):
@@ -87,15 +100,18 @@ def dessiner_infos_perso(surface, perso, centre_img_pos):
     
     # 1. Dessiner le Sprite (redimensionné à SPRITE_TAILLE)
     try:
-        # On redimensionne le sprite chargé (perso.sprite) à notre taille fixe
         sprite_scaled = pygame.transform.scale(perso.sprite, SPRITE_TAILLE)
     except Exception as e:
-        # Au cas où le sprite n'a pas pu être chargé (ex: placeholder)
         print(f"Erreur scaling sprite {perso.name}: {e}")
         sprite_scaled = pygame.Surface(SPRITE_TAILLE)
-        sprite_scaled.fill((255, 0, 255)) # Sprite d'erreur
+        sprite_scaled.fill((255, 0, 255))
         
     rect_img = sprite_scaled.get_rect(center=centre_img_pos)
+    
+    # Griser le sprite si K.O.
+    if perso.is_ko():
+        sprite_scaled.set_alpha(100)
+        
     surface.blit(sprite_scaled, rect_img)
     
     # 2. Dessiner le Nom (sous l'image)
@@ -104,31 +120,18 @@ def dessiner_infos_perso(surface, perso, centre_img_pos):
     surface.blit(nom_texte, nom_rect)
     
     # --- Barre de vie et HP (sous le nom) ---
-    
-    # 3. Position Y de la barre (sous le nom)
     y_barre = nom_rect.bottom + 8
-    
-    # 4. Préparer le texte HP
     hp_texte_surface = police_info.render(f"{perso.hp}/{perso.max_hp}", True, BLANC)
     hp_texte_rect = hp_texte_surface.get_rect()
-    
-    # 5. Calculer le point de départ pour centrer le bloc [BARRE] + [TEXTE]
-    largeur_totale_bloc = BARRE_VIE_LARGEUR + 5 + hp_texte_rect.width # 5px de padding
+    largeur_totale_bloc = BARRE_VIE_LARGEUR + 5 + hp_texte_rect.width
     x_barre_fond = rect_img.centerx - (largeur_totale_bloc / 2)
-    
-    # 6. Dessiner la barre (Fond)
     rect_barre_fond = pygame.Rect(x_barre_fond, y_barre, BARRE_VIE_LARGEUR, BARRE_VIE_HAUTEUR)
     pygame.draw.rect(surface, ROUGE_VIE_FOND, rect_barre_fond, border_radius=4)
-    
-    # 7. Dessiner la barre (Vie)
     ratio_hp = 0
-    if perso.max_hp > 0: # Évite la division par zéro
+    if perso.max_hp > 0:
         ratio_hp = max(0, perso.hp / perso.max_hp)
-        
     rect_barre_vie = pygame.Rect(x_barre_fond, y_barre, BARRE_VIE_LARGEUR * ratio_hp, BARRE_VIE_HAUTEUR)
     pygame.draw.rect(surface, VERT_VIE, rect_barre_vie, border_radius=4)
-    
-    # 8. Dessiner le texte HP (à droite de la barre)
     hp_texte_rect.midleft = (rect_barre_fond.right + 5, rect_barre_fond.centery)
     surface.blit(hp_texte_surface, hp_texte_rect)
 # --- ### FIN NOUVELLE FONCTION ### ---
@@ -136,20 +139,38 @@ def dessiner_infos_perso(surface, perso, centre_img_pos):
 
 # --- Fonctions des différents écrans du jeu ---
 
+# ### MODIFIÉ ### : Logique de tirage mise à jour pour afficher les 6 persos
 def ecran_gacha(game_master: GameMaster):
     """Écran pour le tirage au sort de personnages."""
     print("Écran de tirage Gacha !")
     en_ecran_gacha = True
     horloge = pygame.time.Clock()
 
+    resultat_affiche = False 
+    
     texte_gacha = police_sous_titre.render("Tirage au sort PokIUT", True, VIOLET_SECONDAIRE)
     texte_gacha_rect = texte_gacha.get_rect(center=(LARGEUR // 2, HAUTEUR // 4))
+    
+    texte_resultat = police_sous_titre.render("Félicitations !", True, JAUNE_TITRE)
+    texte_resultat_rect = texte_resultat.get_rect(center=(LARGEUR // 2, 50))
 
     bouton_tirer_rect = pygame.Rect(0, 0, 250, 70)
     bouton_tirer_rect.center = (LARGEUR // 2, HAUTEUR // 2)
 
     bouton_retour_rect = pygame.Rect(0, 0, 200, 60)
     bouton_retour_rect.center = (LARGEUR // 2, HAUTEUR // 2 + 150)
+    
+    bouton_continuer_rect = pygame.Rect(0, 0, 200, 60)
+    bouton_continuer_rect.center = (LARGEUR // 2, HAUTEUR - 60)
+    
+    positions_tirage = [
+        (LARGEUR * 1/4, HAUTEUR // 2 - 120),
+        (LARGEUR * 2/4, HAUTEUR // 2 - 120),
+        (LARGEUR * 3/4, HAUTEUR // 2 - 120),
+        (LARGEUR * 1/4, HAUTEUR // 2 + 180),
+        (LARGEUR * 2/4, HAUTEUR // 2 + 180),
+        (LARGEUR * 3/4, HAUTEUR // 2 + 180),
+    ]
 
     while en_ecran_gacha:
         pos_souris = pygame.mouse.get_pos()
@@ -159,75 +180,140 @@ def ecran_gacha(game_master: GameMaster):
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    if bouton_tirer_rect.collidepoint(event.pos):
-                        print("Faire un tirage de 6 personnages !")
-                        
-                        global equipe_joueur 
-                        global equipe_combat # On réinitialise l'équipe de combat
-                        equipe_combat = []   # car on a tiré une nouvelle équipe
-                        
-                        try:
-                            equipe_joueur = game_master.draw_characters(n=6)
-                            print(f"Équipe obtenue : {[p.name for p in equipe_joueur]}") 
-                            message_tirage = police_bouton.render("Tu as obtenu 6 PokIUTs !", True, BLANC)
-                        except ValueError:
-                            message_tirage = police_bouton.render("Plus de personnages !", True, ROUGE_BOUTON)
-                        
-                        message_tirage_rect = message_tirage.get_rect(center=(LARGEUR // 2, HAUTEUR // 2 - 80))
-                        
-                        if fond_image_jeu: FENETRE.blit(fond_image_jeu, (0, 0))
-                        else: dessiner_fond_degrade(NOIR, VIOLET_SECONDAIRE)
-                        
-                        FENETRE.blit(texte_gacha, texte_gacha_rect)
-                        FENETRE.blit(message_tirage, message_tirage_rect)
-                        
-                        dessiner_bouton("Tirer un PokIUT", bouton_tirer_rect, VERT_BOUTON, BLANC, police_bouton, pos_souris)
-                        dessiner_bouton("Retour", bouton_retour_rect, ROUGE_BOUTON, BLANC, police_bouton, pos_souris)
-                        
-                        pygame.display.flip()
-                        pygame.time.wait(2000)
-                        
-                    elif bouton_retour_rect.collidepoint(event.pos):
-                        en_ecran_gacha = False 
+                    
+                    if resultat_affiche:
+                        if bouton_continuer_rect.collidepoint(event.pos):
+                            resultat_affiche = False 
+                    
+                    else:
+                        if bouton_tirer_rect.collidepoint(event.pos):
+                            print("Faire un tirage de 6 personnages !")
+                            
+                            global equipe_joueur 
+                            global equipe_combat 
+                            equipe_combat = []   
+                            
+                            try:
+                                equipe_joueur = game_master.draw_characters(n=6)
+                                # Soigne l'équipe tirée au cas où
+                                for perso in equipe_joueur:
+                                    perso.heal_full()
+                                print(f"Équipe obtenue : {[p.name for p in equipe_joueur]}") 
+                                resultat_affiche = True 
+                            except ValueError:
+                                print("Erreur: Plus de personnages à tirer !")
+                            
+                        elif bouton_retour_rect.collidepoint(event.pos):
+                            en_ecran_gacha = False
+        
+        if resultat_affiche:
+            # --- DESSIN DE L'ÉCRAN DE RÉSULTAT ---
+            if fond_image_jeu: 
+                FENETRE.blit(fond_image_jeu, (0, 0))
+            else:
+                dessiner_fond_degrade(NOIR, VIOLET_SECONDAIRE) 
 
-        if fond_image_jeu: 
-            FENETRE.blit(fond_image_jeu, (0, 0))
+            FENETRE.blit(texte_resultat, texte_resultat_rect)
+            
+            for i in range(len(equipe_joueur)):
+                if i < len(positions_tirage):
+                    dessiner_infos_perso(FENETRE, equipe_joueur[i], positions_tirage[i])
+            
+            dessiner_bouton("Continuer", bouton_continuer_rect, BLEU_BOUTON, BLANC, police_bouton, pos_souris)
+            
         else:
-            dessiner_fond_degrade(NOIR, VIOLET_SECONDAIRE) 
+            # --- DESSIN DE L'ÉCRAN DE TIRAGE (NORMAL) ---
+            if fond_image_jeu: 
+                FENETRE.blit(fond_image_jeu, (0, 0))
+            else:
+                dessiner_fond_degrade(NOIR, VIOLET_SECONDAIRE) 
 
-        FENETRE.blit(texte_gacha, texte_gacha_rect)
-        dessiner_bouton("Tirer un PokIUT", bouton_tirer_rect, VERT_BOUTON, BLANC, police_bouton, pos_souris)
-        dessiner_bouton("Retour", bouton_retour_rect, ROUGE_BOUTON, BLANC, police_bouton, pos_souris)
+            FENETRE.blit(texte_gacha, texte_gacha_rect)
+            dessiner_bouton("Tirer un PokIUT", bouton_tirer_rect, VERT_BOUTON, BLANC, police_bouton, pos_souris)
+            dessiner_bouton("Retour", bouton_retour_rect, ROUGE_BOUTON, BLANC, police_bouton, pos_souris)
 
         pygame.display.flip()
         horloge.tick(60)
 
-# --- ### MODIFIÉ ### : Écran de combat avec affichage ---
-from combat import lancer_combat
+# --- ### MODIFIÉ ### : Appelle combat.py et gère le résultat ---
+# --- ### MODIFIÉ ### : Appelle combat.py avec les BONS arguments ---
+from combat import lancer_combat # Assure-toi que cet import est en HAUT
 
-def ecran_combat(game_master):
-    lancer_combat(FENETRE, equipe_combat, game_master, dessiner_infos_perso,
-                  police_bouton, police_info, LARGEUR, HAUTEUR, VERT_VIE, ROUGE_VIE_FOND)
+# --- ### MODIFIÉ ### : Appelle combat.py avec les BONS arguments ---
+from combat import lancer_combat # Assure-toi que cet import est en HAUT
+
+def ecran_combat(game_master: GameMaster):
+    """
+    Appelle le module de combat externe et gère la boucle de "rejouer".
+    """
+    print(f"Lancement du module de combat avec : {[p.name for p in equipe_combat]}")
+    
+    global compteur_victoires, compteur_defaites
+
+    en_combat_global = True # Boucle pour rejouer
+    
+    while en_combat_global:
+        
+        # Soigne l'équipe du joueur avant chaque combat
+        for perso in equipe_joueur:
+            perso.heal_full()
+            
+        # Appelle ton module de combat externe avec les 10 arguments corrects
+        resultat = lancer_combat(
+            FENETRE, 
+            equipe_combat, 
+            game_master, 
+            dessiner_infos_perso,
+            police_bouton,  # Argument 5
+            police_info,    # Argument 6
+            LARGEUR,        # Argument 7
+            HAUTEUR,        # Argument 8
+            VERT_VIE,       # Argument 9
+            ROUGE_VIE_FOND  # Argument 10
+        )
+        
+        # --- Gère le résultat retourné par combat.py ---
+        if resultat == "victoire":
+            compteur_victoires += 1
+            print(f"Combat gagné ! (Total: {compteur_victoires}). On rejoue.")
+            # en_combat_global reste True, la boucle recommence
+            
+        elif resultat == "defaite":
+            compteur_defaites += 1
+            print(f"Combat perdu. (Total: {compteur_defaites}). On rejoue.")
+            # en_combat_global reste True, la boucle recommence
+            
+        elif resultat == "changer_equipe":
+            print("Retour à la sélection de l'équipe.")
+            en_combat_global = False # On sort de la boucle "rejouer"
+            
+        else: # Si combat.py se ferme (clic sur "Quitter") ou retourne None
+            print("Sortie du combat. Retour à la sélection.")
+            en_combat_global = False
+
+    # --- Fin de la boucle 'en_combat_global' ---
+    for perso in equipe_joueur:
+        perso.heal_full()
+    print("Sortie de l'écran de combat.")
+# --- ### FIN DE LA MODIFICATION ### ---
 
 # --- ### MODIFIÉ ### : Logique de sélection d'équipe et bouton "Jouer" ---
 def ecran_composition_equipe(game_master: GameMaster):
     """Écran pour la composition d'équipe."""
     print("Écran de composition d'équipe !")
-    global equipe_combat # On va modifier la liste globale
+    global equipe_combat 
     
     en_ecran_equipe = True
     horloge = pygame.time.Clock()
 
     texte_equipe = police_sous_titre.render("Composition d'équipe", True, VIOLET_SECONDAIRE)
-    texte_equipe_rect = texte_equipe.get_rect(center=(LARGEUR // 2, HAUTEUR // 6)) # Plus haut
+    texte_equipe_rect = texte_equipe.get_rect(center=(LARGEUR // 2, HAUTEUR // 6)) 
 
-    # --- Définition des boutons ---
     bouton_retour_rect = pygame.Rect(0, 0, 200, 60)
-    bouton_retour_rect.center = (LARGEUR // 2, HAUTEUR - 60) # Toujours en bas
+    bouton_retour_rect.center = (LARGEUR // 2, HAUTEUR - 60) 
 
     bouton_jouer_rect = pygame.Rect(0, 0, 250, 70)
-    bouton_jouer_rect.center = (LARGEUR // 2, HAUTEUR - 140) # Au-dessus du bouton retour
-    # -----------------------------
+    bouton_jouer_rect.center = (LARGEUR // 2, HAUTEUR - 140) 
 
     options_cliquables = []
     y_offset = HAUTEUR // 2 - 100
@@ -247,19 +333,16 @@ def ecran_composition_equipe(game_master: GameMaster):
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    message_info = "" # Réinitialise le message
+                    message_info = "" 
                     
-                    # --- 1. Clic sur le bouton "Retour" (Toujours actif) ---
                     if bouton_retour_rect.collidepoint(event.pos):
                         en_ecran_equipe = False
                         
-                    # --- 2. Clic sur "Valider et Jouer" (Actif seulement si 3 persos) ---
                     if len(equipe_combat) == 3:
                         if bouton_jouer_rect.collidepoint(event.pos):
                             print("Validation de l'équipe et lancement du combat !")
-                            ecran_combat(game_master) # Lance l'écran de combat
+                            ecran_combat(game_master) 
                             
-                    # --- 3. Clic sur un personnage ---
                     for option in options_cliquables:
                         if option['rect'].collidepoint(event.pos):
                             perso_clique = option['perso']
@@ -275,7 +358,6 @@ def ecran_composition_equipe(game_master: GameMaster):
                                     print("Équipe déjà pleine (3 personnages max) !")
                                     message_info = "Équipe pleine (3 max) !"
 
-        # --- Dessin de l'écran ---
         if fond_image_jeu:
             FENETRE.blit(fond_image_jeu, (0, 0))
         else:
@@ -284,7 +366,7 @@ def ecran_composition_equipe(game_master: GameMaster):
         FENETRE.blit(texte_equipe, texte_equipe_rect)
         
         texte_info = police_info.render(message_info, True, ROUGE_BOUTON)
-        texte_info_rect = texte_info.get_rect(center=(LARGEUR // 2, HAUTEUR - 200)) # Espace pour les boutons
+        texte_info_rect = texte_info.get_rect(center=(LARGEUR // 2, HAUTEUR - 200)) 
         FENETRE.blit(texte_info, texte_info_rect)
         
         texte_statut = police_bouton.render(f"Équipe : {len(equipe_combat)} / 3", True, BLANC)
@@ -301,19 +383,15 @@ def ecran_composition_equipe(game_master: GameMaster):
                 texte_perso = police_bouton.render(perso.name, True, couleur)
                 FENETRE.blit(texte_perso, rect)
 
-        # --- Dessin des boutons ---
-        # 1. Toujours dessiner le bouton "Retour"
         dessiner_bouton("Retour", bouton_retour_rect, ROUGE_BOUTON, BLANC, police_bouton, pos_souris)
         
-        # 2. Dessiner "Valider" seulement si l'équipe est pleine
         if len(equipe_combat) == 3:
             dessiner_bouton("Valider et Jouer", bouton_jouer_rect, VERT_BOUTON, BLANC, police_bouton, pos_souris)
 
         pygame.display.flip()
         horloge.tick(60)
 
-# --- (Le reste du script est identique) ---
-
+# --- ### MODIFIÉ ### : Taille des boutons et affichage score ---
 def main_game_menu(game_master: GameMaster):
     """
     Menu principal du jeu après avoir cliqué sur "Jouer".
@@ -327,11 +405,13 @@ def main_game_menu(game_master: GameMaster):
     titre_jeu_rect = texte_titre_jeu.get_rect(center=(LARGEUR // 2, HAUTEUR // 5))
     ombre_titre_jeu_rect = ombre_titre_jeu.get_rect(center=(LARGEUR // 2 + 3, HAUTEUR // 5 + 3))
 
-    bouton_gacha_rect = pygame.Rect(0, 0, 300, 70)
+    # --- ### MODIFIÉ ICI ### ---
+    bouton_gacha_rect = pygame.Rect(0, 0, 400, 70)
     bouton_gacha_rect.center = (LARGEUR // 2, HAUTEUR // 2 - 80)
 
-    bouton_equipe_rect = pygame.Rect(0, 0, 300, 70)
+    bouton_equipe_rect = pygame.Rect(0, 0, 400, 70)
     bouton_equipe_rect.center = (LARGEUR // 2, HAUTEUR // 2 + 20)
+    # --- ### FIN MODIFICATION ### ---
 
     bouton_retour_rect = pygame.Rect(0, 0, 200, 60)
     bouton_retour_rect.center = (LARGEUR // 2, HAUTEUR // 2 + 150)
@@ -361,9 +441,17 @@ def main_game_menu(game_master: GameMaster):
 
         FENETRE.blit(ombre_titre_jeu, ombre_titre_jeu_rect)
         FENETRE.blit(texte_titre_jeu, titre_jeu_rect)
+
         dessiner_bouton("Tirage de PokIUTs", bouton_gacha_rect, BLEU_BOUTON, BLANC, police_bouton, pos_souris)
         dessiner_bouton("Composition d'équipe", bouton_equipe_rect, VIOLET_SECONDAIRE, BLANC, police_bouton, pos_souris)
         dessiner_bouton("Retour", bouton_retour_rect, ROUGE_BOUTON, BLANC, police_bouton, pos_souris)
+
+        # --- ### AJOUT : Affichage du score ### ---
+        texte_score = police_info.render(f"Victoires : {compteur_victoires} | Défaites : {compteur_defaites}", True, BLANC)
+        score_rect = texte_score.get_rect(center=(LARGEUR // 2, HAUTEUR - 30))
+        FENETRE.blit(texte_score, score_rect)
+        # ------------------------------------
+
         pygame.display.flip()
         horloge.tick(60)
 

@@ -36,8 +36,11 @@ character_list = [
     Character(name="Boubou", max_hp=150, atk=50, defense=50, speed=50, atk_spe=0, def_spe=0, attacks=[slash, punch, kick], sprite="assets/sprites/boubou.png"),
     Character(name="Ouz Route", max_hp=100, atk=100, defense=100, speed=10, atk_spe=0, def_spe=0, attacks=[slash, punch, kick], sprite="assets/sprites/ouzrout.png"),
     Character(name="Fan dy Rassoul", max_hp=10, atk=10, defense=10, speed=50, atk_spe=0, def_spe=0, attacks=[slash, punch, kick], sprite="assets/sprites/fan.png"),
-    Character(name="Charo line", max_hp=90, atk=80, defense=60, speed=60, atk_spe=0, def_spe=0, attacks=[slash, punch, kick], sprite="assets/sprites/charoline.png")
+    Character(name="Charo line", max_hp=90, atk=80, defense=60, speed=60, atk_spe=0, def_spe=0, attacks=[slash, punch, kick], sprite="assets/sprites/charoline.png"),
+    Character(name="Yanis", max_hp=90, atk=80, defense=70, speed=60, atk_spe=0, def_spe=0, attacks=[slash, punch, kick], sprite="assets/sprites/yanis.png"),
+    Character(name="Muller", max_hp=90, atk=90, defense=90, speed=90, atk_spe=0, def_spe=0, attacks=[slash, punch, kick], sprite="assets/sprites/muller.png")
 ]
+
 
 
 
